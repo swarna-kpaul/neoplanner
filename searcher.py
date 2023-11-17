@@ -1,11 +1,20 @@
 from config.keys import *
 from config.prompts import *
+from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.prompts.prompt import PromptTemplate
 import traceback
 from environment.problemenvs import *
 
 import ast
 import pickle
+
+llm_model = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-3.5-turbo-1106",openai_api_key=OPENAIAPIKEY)
+llm_inst_model = OpenAI(temperature=0.7, request_timeout=50, model="gpt-3.5-turbo-instruct",openai_api_key=OPENAIAPIKEY)
+llm_defn_model = OpenAI(temperature=0, request_timeout=50, model="gpt-3.5-turbo-instruct",openai_api_key=OPENAIAPIKEY)
+llm_gpt4 = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-0613",openai_api_key=OPENAIAPIKEY)
+llm_gpt4_turbo = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
+llm_gpt4_turbo_hightemp = ChatOpenAI(temperature=1, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
 
 class neoplanner():
     def __init__ (self, stmloadfile, stmstoragefile):
