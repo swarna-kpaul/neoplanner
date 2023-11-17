@@ -11,6 +11,8 @@ class world_exception(Exception):
 class scienv():
     def __init__(self,task = "1-1", objective = None):
         self.env = ScienceWorldEnv(task)
+        self.MINREWARD = -100
+        self.MAXREWARD = 100
         obs1, info1 = self.env.reset()
         self.model = envmodel()
         self.trace = []
@@ -82,14 +84,15 @@ class scienv():
             self.totalreward += reward
 
         if observation == "No known action matches that input.":
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float(-Inf)})
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf')})
             #raise world_exception("invalid action")
         if actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
             self.goalreached = False
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float(-Inf)})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf')})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
             return self.observation#raise world_exception("invalid action")
-        self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":reward})        
+        normalizedreward = 2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
+        self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward})        
         return observation
     
     

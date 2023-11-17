@@ -37,7 +37,7 @@ class envmodel():
             startnodeid = startnodeid[0]
         else:
             startnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 0,}
+            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,}
             ########## add root node edge
             #rootnodeid = self.statespace["nodes"]["start"]["id"]
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
@@ -53,14 +53,15 @@ class envmodel():
                 self.statespace["nodes"][endnodeid]["trial"] +=1
             else:
                 endnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-                self.statespace["nodes"][endnodeid] = {"state": endstate, "value" : self.DEFAULTVALUE,"trial" : 0}
+                self.statespace["nodes"][endnodeid] = {"state": endstate, "value" : self.DEFAULTVALUE,"trial" : 1}
         
         ############## add update edge
         #if startnodeid+"-"+endnodeid+"-"+action in self.statespace["edges"]:
             ########## action edge already present
         #    self.statespace["edges"][startnodeid+"-"+endnodeid]["reward"] = reward
         #else:
-        self.statespace["edges"][startnodeid+"-"+endnodeid] = {"action": action, "reward": reward,"from":startnodeid,"to":endnodeid}
+        edgeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        self.statespace["edges"][edgeid] = {"action": action, "reward": reward,"from":startnodeid,"to":endnodeid}
         self.totaltrials += 1
         
     def parseacpt_trace(self,ACPT,startstate):    
@@ -73,22 +74,25 @@ class envmodel():
     def updatevalue(self):
         maxvaluediff = 0
         for i in range(10): ###### run for n iterations
-            for node in self.statespace["nodes"]: ######## update value of all nodes
-                fromnodeid = node["id"]
+            for fromnodeid,node in self.statespace["nodes"].items(): ######## update value of all nodes
+                if node["state"] in ["start", "invalid"]:
+                    continue
                 fromnodevalue = node["value"]
-                tonodes = [(edge["to"],edge["reward"]) for edge in self.statespace["edges"] if edge["from"] == fromnodeid and edge["reward"] != float('-Inf')]
+                tonodes = [(edge["to"],edge["reward"]) for edge in self.statespace["edges"].values() if edge["from"] == fromnodeid and edge["reward"] != float('-Inf')]
                 
                 tonodevalues = [ self.statespace["nodes"][tonode[0]]["value"] for tonode in tonodes]
                 ####### update value of from node for each tonode independently
                 for tonode in zip(tonodes,tonodevalues):
                     fromnodevalue += alpha*(tonode[0][1] + gamma*tonode[1] - fromnodevalue)
                     maxvaluediff = max(maxvaluediff, (tonode[0][1] + gamma*tonode[1] - fromnodevalue))
+                self.statespace["nodes"][fromnodeid]["value"] = fromnodevalue
             if  maxvaluediff < TDTHRESHOLD:
                 break            
             
         ########## update UCB
         for id,node in self.statespace["nodes"].items():
-            self.statespace["nodes"][id]["ucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(self.totaltrials)/self.statespace["nodes"][id]["trial"])
+            if node["state"] not in ["start", "invalid"]:
+                self.statespace["nodes"][id]["ucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(self.totaltrials)/self.statespace["nodes"][id]["trial"])
         
         self.defaultucb = self.DEFAULTVALUE + ucb_c*math.sqrt(math.log(self.totaltrials))
         
@@ -100,8 +104,8 @@ class envmodel():
         tonode = ""
         avoidactions = []
         while True:
-            tonodes = [[edge["to"],edges["action"]] for edge in self.statespace["edges"] if edge["from"] == fromnodeid]        
-            tonodes_ucb = [[self.statespace["nodes"][tonodeid]["ucb"],tonodeid] for tonodeid in tonodes if self.statespace["nodes"][tonodeid]["state"] != "invalid"]
+            tonodes = [[edge["to"],edge["action"]] for edge in self.statespace["edges"].values() if edge["from"] == fromnodeid]        
+            tonodes_ucb = [[self.statespace["nodes"][tonode[0]]["ucb"],tonode[0]] for tonode in tonodes if self.statespace["nodes"][tonode[0]]["state"] != "invalid"]
             if not tonodes:
                break
             tonode = max(tonodes_ucb, key=lambda x: x[0])
@@ -110,7 +114,8 @@ class envmodel():
             if tonode[0] < self.defaultucb:
                avoidactions = [i[1] for i in tonodes]
                break
-            actionpath.append(self.statespace["edges"][fromnodeid+"-"+tonode[1]]["action"])
+            bestaction = [i[1] for i in tonodes if i[0] == tonode[1] ][0]
+            actionpath.append(bestaction)
             currentstate = self.statespace["nodes"][tonode[1]]["state"]
             fromnodeid = tonode[1]
         prompt = ""
