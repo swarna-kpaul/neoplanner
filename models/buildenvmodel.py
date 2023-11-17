@@ -11,18 +11,20 @@ class envmodel():
         self.rootnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.invalidnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.DEFAULTVALUE = 0.5
-        self.statespace = {"nodes":{self.rootnodeid: { "state": "start",
-                                   "value" : self.DEFAULTVALUE,
-                                   "trial" : 0,
-                                   "ucb": 0
+        self.statespace = {"nodes":{
+                                   self.rootnodeid: { "state": "start",
+                                                    "value" : self.DEFAULTVALUE,
+                                                    "trial" : 0,
+                                                    "ucb": 0
+                                                    },
+                                   self.invalidnodeid: { "state": "invalid",
+                                                    "value" : self.DEFAULTVALUE,
+                                                    "trial" : 0,
+                                                    "ucb": 0
+                                                       }
                                    },
-                                   {self.invalidnodeid: { "state": "invalid",
-                                   "value" : self.DEFAULTVALUE,
-                                   "trial" : 0,
-                                   "ucb": 0
-                                   }},
-                                   "edges": { startnodeid+"-"+startnodeid:
-                                   {"action": "dummy","from":startnodeid,"to":startnodeid, "reward" : 0}
+                            "edges": { self.rootnodeid+"-"+self.rootnodeid:
+                                   {"action": "dummy","from":self.rootnodeid,"to":self.rootnodeid, "reward" : 0}
                                    }}
         self.totaltrials = 0
         self.defaultucb = self.DEFAULTVALUE + 1
@@ -30,7 +32,7 @@ class envmodel():
         
     def addaction(self,action,startstate, endstate, reward):
         ############## add retrieve start state
-        startnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] = startstate] 
+        startnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == startstate] 
         if startnodeid:
             startnodeid = startnodeid[0]
         else:
@@ -41,11 +43,11 @@ class envmodel():
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
         
         ############## add retrieve end state
-        if reward == -Inf:
+        if reward == float('-Inf'):
             ############3 invalid action
             endnodeid = self.invalidnodeid
         else:
-            endnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] = endstate]         
+            endnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == endstate]         
             if endnodeid:
                 endnodeid = endnodeid[0]
                 self.statespace["nodes"][endnodeid]["trial"] +=1
@@ -74,7 +76,7 @@ class envmodel():
             for node in self.statespace["nodes"]: ######## update value of all nodes
                 fromnodeid = node["id"]
                 fromnodevalue = node["value"]
-                tonodes = [(edge["to"],edge["reward"]) for edge in self.statespace["edges"] if edge["from"] == fromnodeid and edge["reward"] != -Inf]
+                tonodes = [(edge["to"],edge["reward"]) for edge in self.statespace["edges"] if edge["from"] == fromnodeid and edge["reward"] != float('-Inf')]
                 
                 tonodevalues = [ self.statespace["nodes"][tonode[0]]["value"] for tonode in tonodes]
                 ####### update value of from node for each tonode independently
@@ -94,7 +96,7 @@ class envmodel():
         
     def getplandetails(self,currentstate):
         actionpath = []
-        fromnodeid,fromnode = [(id,node) for id,node in self.statespace["nodes"].items() if node["state"] = currentstate][0]
+        fromnodeid,fromnode = [(id,node) for id,node in self.statespace["nodes"].items() if node["state"] == currentstate][0]
         tonode = ""
         avoidactions = []
         while True:

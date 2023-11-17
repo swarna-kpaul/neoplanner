@@ -68,7 +68,7 @@ class neoplanner():
         
         print("ACTPLANPROMPT:",messages)
         while True:
-            output = llm_gpt4_turbo.predict(messages)
+            output = llm_model.predict(messages)
             print("ACTPLANPROMPT output:",output)
             try:
                 output = ast.literal_eval(output)

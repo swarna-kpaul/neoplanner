@@ -1,0 +1,5 @@
+langchain==0.0.330
+openai==0.28.1
+tiktoken
+"pinecone-client[grpc]"==2.2.1
+scienceworld

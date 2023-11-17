@@ -1,27 +1,11 @@
 from scienceworld import ScienceWorldEnv
-from model.buildenvmodel import *
+from models.buildenvmodel import *
 
 class world_exception(Exception):
     def __init__(self, message={}):            
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
         self.error = message
-
-class chatenv():
-    def __init__(self):
-        self.environment = {"description": "Allow user to ask questions and provide optimal answers","objective": "Allow user to ask questions and provide optimal answers", "beliefaxioms":""}
-        return
-        
-    def getfeedback(self):
-        return input("write your feedback.. ")  
-    
-    def act(self):
-        return input("Ask a question.. ")
-    
-    def checkgoal(self):
-        return False
-        
-chatenvobj = chatenv()
 
 
 class scienv():
@@ -98,15 +82,15 @@ class scienv():
             self.totalreward += reward
 
         if observation == "No known action matches that input.":
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state", self.getstate(), "reward":float(-Inf)})
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float(-Inf)})
             #raise world_exception("invalid action")
         if actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
             self.goalreached = False
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state", self.getstate(), "reward":float(-Inf)})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
-            raise world_exception("invalid action")
-        self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state", self.getstate(), "reward":reward})        
-        return self.observation
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float(-Inf)})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
+            return self.observation#raise world_exception("invalid action")
+        self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":reward})        
+        return observation
     
     
     def updatemodel(self):
