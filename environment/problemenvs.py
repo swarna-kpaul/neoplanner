@@ -86,13 +86,14 @@ class scienv():
         if observation == "No known action matches that input.":
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf')})
             #raise world_exception("invalid action")
-        if actiontext.startswith("focus") and reward < 0:
+        elif actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
             self.goalreached = False
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf')})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
             return self.observation#raise world_exception("invalid action")
-        normalizedreward = 2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
-        self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward})        
+        else:
+            normalizedreward = 2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward})        
         return observation
     
     
