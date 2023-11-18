@@ -10,7 +10,7 @@ class envmodel():
     def __init__(self):
         self.rootnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.invalidnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        self.DEFAULTVALUE = 0.5
+        self.DEFAULTVALUE = 0
         self.statespace = {"nodes":{
                                    self.rootnodeid: { "state": "start",
                                                     "value" : self.DEFAULTVALUE,
@@ -60,7 +60,11 @@ class envmodel():
             ########## action edge already present
         #    self.statespace["edges"][startnodeid+"-"+endnodeid]["reward"] = reward
         #else:
-        edgeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        edge = [[edgeid, edge] for edgeid, edge in self.statespace["edges"].items() if edge["from"] == startnodeid and edge["to"] == endnodeid and edge["action"] == action ]
+        if edge:
+            edgeid = edge[0]
+        else:
+            edgeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.statespace["edges"][edgeid] = {"action": action, "reward": reward,"from":startnodeid,"to":endnodeid}
         self.totaltrials += 1
         
