@@ -2,7 +2,7 @@ import random
 import string
 import math 
 alpha = 0.2
-gamma = 0.8
+gamma = 0.9
 TDTHRESHOLD = 0.2
 ucb_c = 1.5
 
