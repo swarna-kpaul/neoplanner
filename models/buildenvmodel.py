@@ -108,8 +108,12 @@ class envmodel():
         
     def getplandetails(self,currentstate):
         actionpath = []
-        fromnodeid,fromnode = [(id,node) for id,node in self.statespace["nodes"].items() if node["state"] == currentstate][0]
-        
+        fromnode = [id for id,node in self.statespace["nodes"].items() if node["state"] == currentstate]
+        if fromnode:
+            fromnodeid = fromnode[0]
+        else:
+            prompt = "\n\nYou are at the state: \n"+currentstate +"\n\n"
+            return prompt,[],[]
         tonode = ""
         avoidactions = []
         while True:
@@ -117,10 +121,15 @@ class envmodel():
             tonodes_ucb = [[self.statespace["nodes"][tonode[0]]["ucb"],tonode[0],self.statespace["nodes"][tonode[0]]["value"]] for tonode in tonodes if self.statespace["nodes"][tonode[0]]["state"] != "invalid"]
             if not tonodes:
                break
+            if not tonodes_ucb:
+               avoidactions = [i[1] for i in tonodes]
+               break
             tonode = max(tonodes_ucb, key=lambda x: x[0])
             #if tonode[1] == fromnodeid:
             #   break
-            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*self.defaultucbexplore
+            fromnodetrials = self.statespace["nodes"][fromnodeid]["trial"]
+            defaultucbexplore = ucb_c*math.sqrt(math.log(fromnodetrials))
+            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*defaultucbexplore
             tonodeexploreucb = (tonode[0] - tonode[2])*self.statespace["nodes"][fromnodeid]["defaultucbfactor"] + tonode[2]
             if tonodeexploreucb < defaultucb:
                avoidactions = [i[1] for i in tonodes]
@@ -130,12 +139,14 @@ class envmodel():
             currentstate = self.statespace["nodes"][tonode[1]]["state"]
             fromnodeid = tonode[1]
         prompt = ""
-        if actionpath:
-            prompt = "You need to take the following actions in sequence \n"+ "\n".join(actionpath)+"\n\n You you arrive at the following state after taking the above actions\n"+currentstate+"\n\n"
-        else:
-            prompt = "You are at the state: \n"+currentstate +"\n\n" 
+        # if actionpath:
+            # prompt = "You need to take the following actions in sequence \n"+ "\n".join(actionpath)+"\n\n You you arrive at the following state after taking the above actions\n"+currentstate+"\n\n"
+        # else:
+        prompt = "You are at the state: \n"+currentstate +"\n\n" 
         if avoidactions:
-            prompt += "find rest of the action plan. You should avoid the following immediate actions from the current state. \n" + "\n".join(avoidactions)
+            prompt += "find rest of the action plan. You should STRICTLY AVOID the following IMMEDIATE ACTIONS from the current state. \n" + "\n".join(avoidactions)
         else:
             prompt += "find rest of the action plan."
         return prompt,actionpath,avoidactions
+        
+  

@@ -17,15 +17,19 @@ llm_gpt4_turbo = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-11
 llm_gpt4_turbo_hightemp = ChatOpenAI(temperature=1, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
 
 class neoplanner():
-    def __init__ (self, stmloadfile, stmstoragefile):
+    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None):
     
         self.stmstoragefile = stmstoragefile
-        self.env = scienv()
+        self.env = scienv(task)
         self.explore = True
         if stmloadfile != None:
             with open(stmloadfile, 'rb') as f:
-                model,actiontrace,environment = pickle.load(f)
-            self.env.model = model
+               rootnodeid,invalidnodeid, DEFAULTVALUE,statespace,totaltrials, actiontrace,environment = pickle.load(f)
+            self.env.model.rootnodeid = rootnodeid
+            self.env.model.invalidnodeid = invalidnodeid
+            self.env.model.DEFAULTVALUE = DEFAULTVALUE
+            self.env.model.statespace = statespace
+            self.env.model.totaltrials = totaltrials
             self.env.environment = environment
             self.env.actiontrace = actiontrace
             ############# execute action trace
@@ -36,22 +40,42 @@ class neoplanner():
             
         self.SEARCHERPROMPT = PromptTemplate(input_variables=SEARCHERPROMPTINPUTVARIABLES, template=searchertemplate)
         self.ACTPLANPROMPT = PromptTemplate(input_variables=ACTPLANPROMPTINPUTVARIABLES, template=actionplantemplate)
+        self.COMBINERPROMPT = PromptTemplate(input_variables=COMBINERVARIABLES, template=combinertemplate)
 
     
-    def searcher (self,EnvTrace,feedback):
+    def searcher (self,EnvTrace,feedback,counter):
         currentenvironment = self.env.environment
-        currentbelief = "  objective:"+ currentenvironment['env']['objective']+"\n  belief axioms:"+ str(currentenvironment['env']["belief axioms"])
-        EnvTrace_text = "\n".join([str(i) for i in EnvTrace])
+        currentbelief = "  objective:"+ currentenvironment['objective']+"\n  belief axioms:"+ str(currentenvironment["belief axioms"])
+        EnvTrace_text = "\n\n".join([str(i) for i in EnvTrace])
         messages = self.SEARCHERPROMPT.format(
                         beliefenvironment = str(currentbelief),
-                        EnvTrace = EnvTrace_text)
+                        EnvTrace = EnvTrace_text,
+                        feedback = feedback)
             #print(messages)
         print("SEARCHERPROMPT:",messages)
-        output = llm_gpt4_turbo.predict(messages)
-        print("SEARCHERPROMPT output:",output)
-        beliefaxioms = ast.literal_eval(output)["beliefaxioms"]
+        while True:
+            try:
+                output = llm_gpt4_turbo.predict(messages)
+                print("SEARCHERPROMPT output:",output)
+                beliefaxioms = ast.literal_eval(output)
+                break
+            except Exception as e:
+                input("press any key....")
+                continue                
+        if counter == 0 or len(beliefaxioms) > 10:
+            messages = self.COMBINERPROMPT.format(beliefaxioms = beliefaxioms)
+            print("COMBINERPROMPT:",messages)
+            while True:
+                try:
+                    output = llm_gpt4_turbo.predict(messages)
+                    print("COMBINERPROMPT output:",output)
+                    beliefaxioms = ast.literal_eval(output)
+                    break
+                except Exception as e:
+                    input("press any key....")
+                    continue 
         self.env.environment["belief axioms"] = beliefaxioms
-
+        
         return output
     
     def actplan(self, additionalinstructions = ""):
@@ -63,12 +87,12 @@ class neoplanner():
             currentenvironmenttext = "    objective: \n" + currentenvironment["objective"] +"\n\n"+" prior axioms: \n"+currentenvironment["prior axioms"]+"\n\n"+ "     belief axioms:\n"+beliefaxioms+"\n\n"
 
         messages = self.ACTPLANPROMPT.format(beliefenvironment = currentenvironmenttext, \
-                        actionplanexamples = self.env.problemenv.examples,\
+                        actionplanexamples = self.env.examples,\
                         instructions = additionalinstructions)
         
         print("ACTPLANPROMPT:",messages)
         while True:
-            output = llm_model.predict(messages)
+            output = llm_gpt4_turbo_hightemp.predict(messages)
             print("ACTPLANPROMPT output:",output)
             try:
                 output = ast.literal_eval(output)
@@ -89,33 +113,40 @@ class neoplanner():
             print("GOAL REACHED",self.env.goalreached)
             if lifetime <= 0: # or self.env.goalreached:
                 break
-                
+            EnvTrace = []
+            for i in range(3):    
             ####### get additional instructions
-            instructions,_,_ = self.env.getinstructions()
+                instructions,preactionplan,_ = self.env.getinstructions()
                 
- 
+                
             ###### Run actor
-            print("Running actionplan....")
-            actionplan = []
+                print("Running actionplan....")
+                actionplan = []
             
-            actionplan = self.actplan(instructions)
-            k = input("Press any button to continue ...")
-            
+                actionplan = self.actplan(instructions)
+                k = input("Press any button to continue ...")
+                actionplan = preactionplan + actionplan
+                
+                print ("FULL ACTION PLAN: ", actionplan)
             ########### Take actions
-            for action in actionplan:
-                self.env.act(action)
-            
-            
-            env.updatemodel()
-            feedback = env.getfeedback()
-            
-            EnvTrace = [{"action": trace["action"], "observation": trace["observation"]} for trace in env.trace]
-            self.searcher(EnvTrace, feedback)
+                try:
+                    for action in actionplan:
+                        self.env.act(action)
+                except world_exception as e:
+                    pass
+                
+                
+                self.env.updatemodel()
+                feedback = self.env.getfeedback()
+                EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace]
+                self.env.trace = []
+                
+            self.searcher(EnvTrace, feedback, counter)
             input("Press any key to continue...")
-            env.trace = []
-          
+            self.env.reset()
+            counter += 1
             with open(self.stmstoragefile, 'wb') as f:
-                pickle.dump((self.env.model,self.env.actiontrace,self.env.environment),f)
+                pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
 
             
    
