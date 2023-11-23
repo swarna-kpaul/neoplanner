@@ -111,6 +111,7 @@ class neoplanner():
             
             EnvTrace = [{"action": trace["action"], "observation": trace["observation"]} for trace in env.trace]
             self.searcher(EnvTrace, feedback)
+            input("Press any key to continue...")
             env.trace = []
           
             with open(self.stmstoragefile, 'wb') as f:

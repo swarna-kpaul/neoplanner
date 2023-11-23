@@ -102,6 +102,7 @@ class scienv():
         self.model.parseacpt_trace(self.trace,self.environment["current state"])
         self.environment["current state"] = self.trace[-1]["state"]
         self.model.updatevalue()
+        #self.trace = []
     
     def getinstructions(self):
         return self.model.getplandetails(self.environment["current state"])
