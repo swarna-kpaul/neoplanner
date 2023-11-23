@@ -61,7 +61,7 @@ class envmodel():
                 self.statespace["nodes"][endnodeid] = {"state": endstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":totalactions}
         
         ############## add update edge
-        edge = [[edgeid, edge] for edgeid, edge in self.statespace["edges"].items() if edge["from"] == startnodeid and edge["to"] == endnodeid and edge["action"] == action ]
+        edge = [edgeid for edgeid, edge in self.statespace["edges"].items() if edge["from"] == startnodeid and edge["to"] == endnodeid and edge["action"] == action ]
         if edge:
             edgeid = edge[0]
         else:
