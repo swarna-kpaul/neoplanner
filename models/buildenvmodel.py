@@ -4,7 +4,7 @@ import math
 alpha = 0.2
 gamma = 0.9
 TDTHRESHOLD = 0.2
-ucb_c = 0.2
+ucb_c = 0.1
 NONLINEARITYFACTOR = 3
 EXPLORETRIALTHRES = 2
 class envmodel():
@@ -33,19 +33,28 @@ class envmodel():
                                    }}
         self.totaltrials = 0
         self.defaultucb = self.DEFAULTVALUE + 1
+        self.rootstate = True
         
         
     def addaction(self,action,startstate, endstate, reward, totalactions):
+        ###### if parent node of start node is root node then increment rootnode trial by 1
+        if self.rootstate:
+            self.statespace["nodes"][self.rootnodeid]["trial"] +=1
+            
         ############## add retrieve start state
         startnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == startstate] 
         if startnodeid:
             startnodeid = startnodeid[0]
         else:
             startnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":totalactions}
+            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 0,"totalpossibleaction":totalactions}
             ########## add root node edge
             #rootnodeid = self.statespace["nodes"]["start"]["id"]
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
+        if self.rootstate:
+            self.statespace["nodes"][startnodeid]["trial"] +=1
+            self.rootstate = False
+        
         
         ############## add retrieve end state
         if reward == float('-Inf'):
@@ -73,6 +82,7 @@ class envmodel():
         for actionperception in ACPT:
             self.addaction(actionperception["action"], startstate, actionperception["state"], actionperception["reward"], actionperception["totactions"])
             startstate = actionperception["state"]
+            
         self.updatevalue()        
 
         
@@ -97,7 +107,8 @@ class envmodel():
         ########## update UCB
         for id,node in self.statespace["nodes"].items():
             if node["state"] not in ["start", "invalid"]:
-                self.statespace["nodes"][id]["ucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(self.totaltrials)/self.statespace["nodes"][id]["trial"])
+                parentnodetrials = sum([ self.statespace["nodes"][edge["from"]]["trial"] for edge in self.statespace["edges"].values() if edge["to"] == id ])
+                self.statespace["nodes"][id]["ucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(parentnodetrials)/self.statespace["nodes"][id]["trial"])
                 numberofvalidactionstaken = len([edge for edge in self.statespace["edges"].values() if edge["from"] == id and self.statespace["nodes"][edge["to"]]["state"] != "invalid"])
                 self.statespace["nodes"][id]["defaultucbfactor"] = pow((self.statespace["nodes"][id]["totalpossibleaction"] - numberofvalidactionstaken)/self.statespace["nodes"][id]["totalpossibleaction"], NONLINEARITYFACTOR)
                 #self.statespace["nodes"][id]["exploreucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(self.totaltrials)/self.statespace["nodes"][id]["trial"])*pow((self.statespace["nodes"][id]["totalpossibleaction"] - numberofvalidactionstaken)/self.statespace["nodes"][id]["totalpossibleaction"], NONLINEARITYFACTOR)
@@ -129,9 +140,9 @@ class envmodel():
                break
             tonode = max(tonodes_ucb, key=lambda x: x[0])
            
-            #fromnodetrials = self.statespace["nodes"][fromnodeid]["trial"]
-            #defaultucbexplore = ucb_c*math.sqrt(math.log(fromnodetrials))
-            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*self.defaultucbexplore
+            fromnodetrials = self.statespace["nodes"][fromnodeid]["trial"]
+            defaultucbexplore = ucb_c*math.sqrt(math.log(fromnodetrials))
+            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*defaultucbexplore
             tonodeexploreucb = (tonode[0] - tonode[2])*self.statespace["nodes"][fromnodeid]["defaultucbfactor"] + tonode[2]
             
             if tonodeexploreucb < defaultucb:
