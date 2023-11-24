@@ -78,9 +78,15 @@ class neoplanner():
         
         return output
     
-    def actplan(self, additionalinstructions = ""):
-        currentenvironment = self.env.environment
+    def actplan(self, additionalinstructions = "", explore =True, envtrace = []):
+        currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
+        if random.random() > 0.5:
+            currentenvironment["objective"] = exploreobjective
+        if envtrace:
+           envtrace = "\n".join("action: "+envtrace["action"]+"; observation: "+envtrace["observation"])
+        else:
+           envtrace = ""
         if not additionalinstructions :
             currentenvironmenttext = "    objective: \n" + currentenvironment["objective"] +"\n\n"+" prior axioms: \n"+currentenvironment["prior axioms"]+"\n\n"+ "     belief axioms:\n"+beliefaxioms+"\n\n"+"    current state:\n"+ currentenvironment["current state"]
         else:
@@ -88,11 +94,12 @@ class neoplanner():
 
         messages = self.ACTPLANPROMPT.format(beliefenvironment = currentenvironmenttext, \
                         actionplanexamples = self.env.examples,\
+                        envtrace = envtrace, \
                         instructions = additionalinstructions)
         
         print("ACTPLANPROMPT:",messages)
         while True:
-            output = llm_gpt4_turbo_hightemp.predict(messages)
+            output = llm_model.predict(messages)
             print("ACTPLANPROMPT output:",output)
             try:
                 output = ast.literal_eval(output)
@@ -114,16 +121,16 @@ class neoplanner():
             if lifetime <= 0: # or self.env.goalreached:
                 break
             EnvTrace = []
-            for i in range(3):    
+            for i in range(4):    
             ####### get additional instructions
-                instructions,preactionplan,_ = self.env.getinstructions()
+                instructions,preactionplan,_,explore = self.env.getinstructions()
                 
                 
             ###### Run actor
                 print("Running actionplan....")
                 actionplan = []
             
-                actionplan = self.actplan(instructions)
+                actionplan = self.actplan(instructions,explore,EnvTrace)
                 k = input("Press any button to continue ...")
                 actionplan = preactionplan + actionplan
                 

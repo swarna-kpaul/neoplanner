@@ -4,9 +4,9 @@ import math
 alpha = 0.2
 gamma = 0.9
 TDTHRESHOLD = 0.2
-ucb_c = 1.1
+ucb_c = 0.7
 NONLINEARITYFACTOR = 3
-
+EXPLORETRIALTHRES = 2
 class envmodel():
     def __init__(self):
         self.rootnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -116,37 +116,49 @@ class envmodel():
             return prompt,[],[]
         tonode = ""
         avoidactions = []
+        visitednodeids = [fromnodeid]
         while True:
             tonodes = [[edge["to"],edge["action"]] for edge in self.statespace["edges"].values() if edge["from"] == fromnodeid]        
             tonodes_ucb = [[self.statespace["nodes"][tonode[0]]["ucb"],tonode[0],self.statespace["nodes"][tonode[0]]["value"]] for tonode in tonodes if self.statespace["nodes"][tonode[0]]["state"] != "invalid"]
             if not tonodes:
+               print("NO LEAFNODES....")
                break
             if not tonodes_ucb:
                avoidactions = [i[1] for i in tonodes]
+               print("NO VALID LEAFNODES....")
                break
             tonode = max(tonodes_ucb, key=lambda x: x[0])
-            #if tonode[1] == fromnodeid:
-            #   break
-            fromnodetrials = self.statespace["nodes"][fromnodeid]["trial"]
-            defaultucbexplore = ucb_c*math.sqrt(math.log(fromnodetrials))
-            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*defaultucbexplore
+           
+            #fromnodetrials = self.statespace["nodes"][fromnodeid]["trial"]
+            #defaultucbexplore = ucb_c*math.sqrt(math.log(fromnodetrials))
+            defaultucb = self.DEFAULTVALUE + self.statespace["nodes"][fromnodeid]["defaultucbfactor"]*self.defaultucbexplore
             tonodeexploreucb = (tonode[0] - tonode[2])*self.statespace["nodes"][fromnodeid]["defaultucbfactor"] + tonode[2]
+            
             if tonodeexploreucb < defaultucb:
                avoidactions = [i[1] for i in tonodes]
+               print("EXPLORING....")
+               break
+            if tonode[1] in visitednodeids:
+               print("LOOP DETECTED.... ",tonode[1])
                break
             bestaction = [i[1] for i in tonodes if i[0] == tonode[1] ][0]
             actionpath.append(bestaction)
             currentstate = self.statespace["nodes"][tonode[1]]["state"]
             fromnodeid = tonode[1]
+            visitednodeids.append(fromnodeid)
         prompt = ""
         # if actionpath:
             # prompt = "You need to take the following actions in sequence \n"+ "\n".join(actionpath)+"\n\n You you arrive at the following state after taking the above actions\n"+currentstate+"\n\n"
         # else:
+        if self.statespace["nodes"][fromnodeid]["trial"] > EXPLORETRIALTHRES:
+            explore = True
+        else:
+            explore = False
         prompt = "You are at the state: \n"+currentstate +"\n\n" 
         if avoidactions:
             prompt += "find rest of the action plan. You should STRICTLY AVOID the following IMMEDIATE ACTIONS from the current state. \n" + "\n".join(avoidactions)
         else:
             prompt += "find rest of the action plan."
-        return prompt,actionpath,avoidactions
+        return prompt,actionpath,avoidactions,explore
         
   

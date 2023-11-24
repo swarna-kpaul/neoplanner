@@ -4,6 +4,8 @@ actionplantemplate = """System: You are an AI action planner for an autonomous a
 Here are some example output.
   {actionplanexamples}
 
+Here are some historical traces of action and observation:
+{envtrace}
 
 User: Generate the action plan for the following environment. If there are ADDITIONAL INSTRUCTIONS, then give MOST IMPORTANCE on the ADDITIONAL INSTRUCTIONS to generate the action plan.
 Environment:
@@ -18,7 +20,7 @@ AI:
 
 
     
-ACTPLANPROMPTINPUTVARIABLES = ["beliefenvironment", "actionplanexamples","instructions"]
+ACTPLANPROMPTINPUTVARIABLES = ["beliefenvironment", "actionplanexamples","envtrace","instructions"]
 
  
 searchertemplate = """System: You are an expert assitant. You are given ACTION OBSERVATION TRACE, a sequence of actions that an agent made in a environment to accomplish a task and the perceptions it got.
@@ -56,8 +58,10 @@ AI:
 SEARCHERPROMPTINPUTVARIABLES = ["beliefenvironment","EnvTrace", "feedback"] #, "critique"
 
 
-combinertemplate = """User: combine the following lines of a list into 1 wherever possible without chaning the meaning. the output should be a list of text.
+combinertemplate = """User: combine the following lines of a list into 1 wherever possible without chaning the meaning. the output should be STRICTY a list of text. Do not generate any aditional explanations. add escape charachters in text wherever required.
 {beliefaxioms}
 """
 
 COMBINERVARIABLES = ["beliefaxioms"]
+
+exploreobjective = """ Create a sequence of actions to explore and know more about the environment"""
