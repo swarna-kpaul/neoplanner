@@ -17,9 +17,10 @@ llm_gpt4_turbo = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-11
 llm_gpt4_turbo_hightemp = ChatOpenAI(temperature=1, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
 
 class neoplanner():
-    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None):
+    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None, beliefstorefile = None, beliefloadfile = None):
     
         self.stmstoragefile = stmstoragefile
+        self.beliefstorefile = beliefstorefile
         self.env = scienv(task)
         self.explore = True
         if stmloadfile != None:
@@ -34,6 +35,10 @@ class neoplanner():
             self.env.actiontrace = actiontrace
             ############# execute action trace
             self.env.traceact()
+        if beliefloadfile != None:
+            with open(stmloadfile, 'rb') as f:
+               beliefaxioms = pickle.load(f)
+            self.env.environment["belief axioms"] = beliefaxioms
         
             print (self.env.getstate())
             input("Press a key to continue ....")
@@ -84,7 +89,7 @@ class neoplanner():
         if random.random() > 0.5:
             currentenvironment["objective"] = exploreobjective
         if envtrace:
-           envtrace = "\n".join("action: "+envtrace["action"]+"; observation: "+envtrace["observation"])
+           envtrace = "\n".join(["action: "+i["action"]+"; observation: "+i["observation"] for i in envtrace])
         else:
            envtrace = ""
         if not additionalinstructions :
@@ -155,7 +160,8 @@ class neoplanner():
             with open(self.stmstoragefile, 'wb') as f:
                 pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
 
-            
+            with open(self.beliefstorefile, 'wb') as f:
+                pickle.dump(self.env.environment["belief axioms"],f)
    
             
         

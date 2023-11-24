@@ -32,7 +32,7 @@ Each line can ONLY be of the following forms :
 
 where X and Z are entities, subject, object, events from action perception trace and Y is relation between X and Z. DO NOT add "_" in X, Y or Z. Rogorously capture everything in the action observation trace as memory. 
     
-Update on top of the current estimated belief axioms of the current environment based on the action observation trace. 
+Update on top of the current estimated belief axioms of the current environment based on the action observation trace. Do not remove the existing beliefs.
 Modify or remove the existing beliefs only if it contradicts with  ACTION OBSERVATION TRACE. You can add your new beliefs to the belief axioms. 
 
 The output should always be STRICTLY generated in the following list structure.
@@ -58,10 +58,10 @@ AI:
 SEARCHERPROMPTINPUTVARIABLES = ["beliefenvironment","EnvTrace", "feedback"] #, "critique"
 
 
-combinertemplate = """User: combine the following lines of a list into 1 wherever possible without chaning the meaning. the output should be STRICTY a list of text. Do not generate any aditional explanations. add escape charachters in text wherever required.
+combinertemplate = """User: combine the following lines of a list into 1 wherever possible without chaning the meaning. the output should be STRICTY a list of text. Do not generate any aditional explanations. DO NOT enclose with any tags. add escape charachters in text wherever required.
 {beliefaxioms}
 """
 
 COMBINERVARIABLES = ["beliefaxioms"]
 
-exploreobjective = """ Create a sequence of actions to explore and know more about the environment"""
+exploreobjective = """ Create a long sequence of actions to explore and know more about the environment"""

@@ -24,7 +24,7 @@ class envmodel():
                                                     "value" : self.DEFAULTVALUE,
                                                     "trial" : 0,
                                                     "ucb": 0,
-                                                    "totalpossibleaction":0,
+                                                    "totalpossibleaction":1,
                                                     "defaultucbfactor" : 0
                                                        }
                                    },
@@ -113,7 +113,7 @@ class envmodel():
             fromnodeid = fromnode[0]
         else:
             prompt = "\n\nYou are at the state: \n"+currentstate +"\n\n"
-            return prompt,[],[]
+            return prompt,[],[],False
         tonode = ""
         avoidactions = []
         visitednodeids = [fromnodeid]
