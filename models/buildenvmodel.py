@@ -4,7 +4,7 @@ import math
 alpha = 0.2
 gamma = 0.9
 TDTHRESHOLD = 0.2
-ucb_c = 0.7
+ucb_c = 0.2
 NONLINEARITYFACTOR = 3
 EXPLORETRIALTHRES = 2
 class envmodel():
