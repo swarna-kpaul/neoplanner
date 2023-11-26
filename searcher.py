@@ -17,7 +17,7 @@ llm_gpt4_turbo = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-11
 llm_gpt4_turbo_hightemp = ChatOpenAI(temperature=1, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
 
 class neoplanner():
-    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None, beliefstorefile = None, beliefloadfile = None):
+    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None, beliefstorefile = None, beliefloadfile = None, counter = 0):
     
         self.stmstoragefile = stmstoragefile
         self.beliefstorefile = beliefstorefile
@@ -36,13 +36,13 @@ class neoplanner():
             ############# execute action trace
             self.env.traceact()
         if beliefloadfile != None:
-            with open(stmloadfile, 'rb') as f:
+            with open(beliefloadfile, 'rb') as f:
                beliefaxioms = pickle.load(f)
             self.env.environment["belief axioms"] = beliefaxioms
         
             print (self.env.getstate())
             input("Press a key to continue ....")
-            
+        self.counter = counter    
         self.SEARCHERPROMPT = PromptTemplate(input_variables=SEARCHERPROMPTINPUTVARIABLES, template=searchertemplate)
         self.ACTPLANPROMPT = PromptTemplate(input_variables=ACTPLANPROMPTINPUTVARIABLES, template=actionplantemplate)
         self.COMBINERPROMPT = PromptTemplate(input_variables=COMBINERVARIABLES, template=combinertemplate)
@@ -67,7 +67,7 @@ class neoplanner():
             except Exception as e:
                 input("press any key....")
                 continue                
-        if counter == 0 or len(beliefaxioms) > 10:
+        if counter == 0 or len(beliefaxioms) > 50:
             messages = self.COMBINERPROMPT.format(beliefaxioms = beliefaxioms)
             print("COMBINERPROMPT:",messages)
             while True:
@@ -104,7 +104,7 @@ class neoplanner():
         
         print("ACTPLANPROMPT:",messages)
         while True:
-            output = llm_model.predict(messages)
+            output = llm_gpt4_turbo.predict(messages)
             print("ACTPLANPROMPT output:",output)
             try:
                 output = ast.literal_eval(output)
@@ -120,7 +120,7 @@ class neoplanner():
         
     
     def train (self, lifetime = float("Inf")):   
-        counter = 0
+        counter = self.counter
         while True:
             print("GOAL REACHED",self.env.goalreached)
             if lifetime <= 0: # or self.env.goalreached:

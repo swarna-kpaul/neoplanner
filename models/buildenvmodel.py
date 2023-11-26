@@ -4,7 +4,7 @@ import math
 alpha = 0.2
 gamma = 0.9
 TDTHRESHOLD = 0.2
-ucb_c = 0.1
+ucb_c = 0.5
 NONLINEARITYFACTOR = 3
 EXPLORETRIALTHRES = 2
 class envmodel():
@@ -45,15 +45,16 @@ class envmodel():
         startnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == startstate] 
         if startnodeid:
             startnodeid = startnodeid[0]
+            if self.rootstate:
+                self.statespace["nodes"][startnodeid]["trial"] +=1
+                self.rootstate = False
         else:
             startnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 0,"totalpossibleaction":totalactions}
+            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":totalactions}
             ########## add root node edge
             #rootnodeid = self.statespace["nodes"]["start"]["id"]
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
-        if self.rootstate:
-            self.statespace["nodes"][startnodeid]["trial"] +=1
-            self.rootstate = False
+        
         
         
         ############## add retrieve end state

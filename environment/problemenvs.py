@@ -48,6 +48,7 @@ class scienv():
     def reset(self):
         obs1, info1 = self.env.reset()
         self.environment["current state"] = self.getstate()
+        self.model.rootstate = True
      
     def getstate(self):
         obs, _,_,_ = self.env.step("look around")
@@ -97,7 +98,12 @@ class scienv():
             #return self.observation#
             raise world_exception("invalid action")
         else:
-            normalizedreward = 2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
+            if reward > 0:
+                normalizedreward = math.log(reward)
+            elif reward < 0: 
+                normalizedreward = -math.log(-reward)
+            else:
+                normalizedreward = reward#2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
             totalpossibleactions = len(self.env.getValidActionObjectCombinationsWithTemplates())
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward, "totactions": totalpossibleactions})        
         return observation
