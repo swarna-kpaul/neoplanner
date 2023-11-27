@@ -49,6 +49,7 @@ class scienv():
         obs1, info1 = self.env.reset()
         self.environment["current state"] = self.getstate()
         self.model.rootstate = True
+        self.totalreward = 0
      
     def getstate(self):
         obs, _,_,_ = self.env.step("look around")
@@ -66,7 +67,8 @@ class scienv():
         
     def getfeedback(self):
         feedback = self.success_map('reward',self.totalreward)
-        self.totalreward = 0
+        print ("total reward", self.totalreward)
+        #self.totalreward = 0
         #if max(self.reward) == 0:
         #    reward = -0.5
         #else:

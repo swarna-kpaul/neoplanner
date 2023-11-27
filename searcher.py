@@ -83,10 +83,16 @@ class neoplanner():
         
         return output
     
-    def actplan(self, additionalinstructions = "", explore =True, envtrace = []):
+    def actplan(self, additionalinstructions = "", explore =True, envtrace = [],ucbfactor = 1):
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
-        if random.random() > 0.5:
+        
+        explore_probability = random.random()*ucbfactor
+        probabilities = [explore_probability, 1-explore_probability]
+        population = ["explore","objective"]
+        item = random.choices(population, probabilities)[0]
+        
+        if  item == "explore":
             currentenvironment["objective"] = exploreobjective
         if envtrace:
            envtrace = "\n".join(["action: "+i["action"]+"; observation: "+i["observation"] for i in envtrace])
@@ -128,14 +134,14 @@ class neoplanner():
             EnvTrace = []
             for i in range(4):    
             ####### get additional instructions
-                instructions,preactionplan,_,explore = self.env.getinstructions()
+                instructions,preactionplan,_,explore,ucbfactor = self.env.getinstructions()
                 
                 
             ###### Run actor
                 print("Running actionplan....")
                 actionplan = []
             
-                actionplan = self.actplan(instructions,explore,EnvTrace)
+                actionplan = self.actplan(instructions,explore,EnvTrace,ucbfactor)
                 k = input("Press any button to continue ...")
                 actionplan = preactionplan + actionplan
                 

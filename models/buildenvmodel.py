@@ -4,7 +4,7 @@ import math
 alpha = 0.2
 gamma = 0.9
 TDTHRESHOLD = 0.2
-ucb_c = 0.5
+ucb_c = 0.9
 NONLINEARITYFACTOR = 3
 EXPLORETRIALTHRES = 2
 class envmodel():
@@ -15,7 +15,7 @@ class envmodel():
         self.statespace = {"nodes":{
                                    self.rootnodeid: { "state": "start",
                                                     "value" : self.DEFAULTVALUE,
-                                                    "trial" : 0,
+                                                    "trial" : 1,
                                                     "ucb": 0,
                                                     "totalpossibleaction":1,
                                                     "defaultucbfactor" : 0
@@ -40,14 +40,12 @@ class envmodel():
         ###### if parent node of start node is root node then increment rootnode trial by 1
         if self.rootstate:
             self.statespace["nodes"][self.rootnodeid]["trial"] +=1
-            
+
         ############## add retrieve start state
         startnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == startstate] 
         if startnodeid:
             startnodeid = startnodeid[0]
-            if self.rootstate:
-                self.statespace["nodes"][startnodeid]["trial"] +=1
-                self.rootstate = False
+                
         else:
             startnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
             self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":totalactions}
@@ -55,7 +53,9 @@ class envmodel():
             #rootnodeid = self.statespace["nodes"]["start"]["id"]
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
         
-        
+        if self.rootstate:
+            self.statespace["nodes"][startnodeid]["trial"] +=1
+            self.rootstate = False
         
         ############## add retrieve end state
         if reward == float('-Inf'):
@@ -74,6 +74,7 @@ class envmodel():
         edge = [edgeid for edgeid, edge in self.statespace["edges"].items() if edge["from"] == startnodeid and edge["to"] == endnodeid and edge["action"] == action ]
         if edge:
             edgeid = edge[0]
+            reward = reward + self.statespace["edges"][edgeid]["reward"]
         else:
             edgeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.statespace["edges"][edgeid] = {"action": action, "reward": reward,"from":startnodeid,"to":endnodeid}
@@ -162,6 +163,7 @@ class envmodel():
         # if actionpath:
             # prompt = "You need to take the following actions in sequence \n"+ "\n".join(actionpath)+"\n\n You you arrive at the following state after taking the above actions\n"+currentstate+"\n\n"
         # else:
+        ucbfactor = self.statespace["nodes"][fromnodeid]["defaultucbfactor"]
         if self.statespace["nodes"][fromnodeid]["trial"] > EXPLORETRIALTHRES:
             explore = True
         else:
@@ -171,6 +173,6 @@ class envmodel():
             prompt += "find rest of the action plan. You should STRICTLY AVOID the following IMMEDIATE ACTIONS from the current state. \n" + "\n".join(avoidactions)
         else:
             prompt += "find rest of the action plan."
-        return prompt,actionpath,avoidactions,explore
+        return prompt,actionpath,avoidactions,explore,ucbfactor
         
   
