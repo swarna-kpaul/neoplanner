@@ -87,7 +87,7 @@ class neoplanner():
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
         
-        explore_probability = random.random()*ucbfactor
+        explore_probability = 0.5*ucbfactor
         probabilities = [explore_probability, 1-explore_probability]
         population = ["explore","objective"]
         item = random.choices(population, probabilities)[0]
