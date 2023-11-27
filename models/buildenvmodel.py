@@ -74,7 +74,7 @@ class envmodel():
         edge = [edgeid for edgeid, edge in self.statespace["edges"].items() if edge["from"] == startnodeid and edge["to"] == endnodeid and edge["action"] == action ]
         if edge:
             edgeid = edge[0]
-            reward = reward + self.statespace["edges"][edgeid]["reward"]
+            reward = max(reward, self.statespace["edges"][edgeid]["reward"])
         else:
             edgeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         self.statespace["edges"][edgeid] = {"action": action, "reward": reward,"from":startnodeid,"to":endnodeid}
