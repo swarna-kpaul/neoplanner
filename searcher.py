@@ -31,14 +31,16 @@ class neoplanner():
             self.env.model.DEFAULTVALUE = DEFAULTVALUE
             self.env.model.statespace = statespace
             self.env.model.totaltrials = totaltrials
+
             self.env.environment = environment
             self.env.actiontrace = actiontrace
             ############# execute action trace
             self.env.traceact()
         if beliefloadfile != None:
             with open(beliefloadfile, 'rb') as f:
-               beliefaxioms = pickle.load(f)
+               beliefaxioms,totalexplore = pickle.load(f)
             self.env.environment["belief axioms"] = beliefaxioms
+            self.env.totalexplore = totalexplore
         
             print (self.env.getstate())
             input("Press a key to continue ....")
@@ -87,13 +89,14 @@ class neoplanner():
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
         
-        explore_probability = 0.5*ucbfactor
+        explore_probability = 0.6/ math.log(self.env.totalexplore)
         probabilities = [explore_probability, 1-explore_probability]
         population = ["explore","objective"]
         item = random.choices(population, probabilities)[0]
         
         if  item == "explore":
             currentenvironment["objective"] = exploreobjective
+            self.env.totalexplore += 1
         if envtrace:
            envtrace = "\n".join(["action: "+i["action"]+"; observation: "+i["observation"] for i in envtrace])
         else:
@@ -167,7 +170,7 @@ class neoplanner():
                 pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
 
             with open(self.beliefstorefile, 'wb') as f:
-                pickle.dump(self.env.environment["belief axioms"],f)
+                pickle.dump((self.env.environment["belief axioms"],self.env.totalexplore),f)
    
             
         

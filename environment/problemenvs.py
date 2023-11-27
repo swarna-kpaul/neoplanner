@@ -11,6 +11,7 @@ class world_exception(Exception):
 class scienv():
     def __init__(self,task = "1-1", objective = None):
         self.env = ScienceWorldEnv(task)
+        self.totalexplore = 0
         self.MINREWARD = -100
         self.MAXREWARD = 100
         obs1, info1 = self.env.reset()

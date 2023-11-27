@@ -126,7 +126,7 @@ class envmodel():
             fromnodeid = fromnode[0]
         else:
             prompt = "\n\nYou are at the state: \n"+currentstate +"\n\n"
-            return prompt,[],[],False
+            return prompt,[],[],False,1
         tonode = ""
         avoidactions = []
         visitednodeids = [fromnodeid]
