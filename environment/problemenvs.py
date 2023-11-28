@@ -11,7 +11,7 @@ class world_exception(Exception):
 class scienv():
     def __init__(self,task = "1-1", objective = None):
         self.env = ScienceWorldEnv(task)
-        self.totalexplore = 0
+        self.totalexplore = 3
         self.MINREWARD = -100
         self.MAXREWARD = 100
         obs1, info1 = self.env.reset()
@@ -21,6 +21,7 @@ class scienv():
         self.reward = -1
         self.totalreward = 0
         self.goalreached = False
+        self.additionalstateinfo = ""
         predescription = "An AI agent helping execute a science experiment in a simulated environment with limited number of objects and actions available at each step. "
         prioraxioms = """
         an agent situated in textual task environment. Generate a sequence of actions to meet the objective.
@@ -51,12 +52,13 @@ class scienv():
         self.environment["current state"] = self.getstate()
         self.model.rootstate = True
         self.totalreward = 0
+        self.additionalstateinfo = ""
      
     def getstate(self):
         obs, _,_,_ = self.env.step("look around")
         state = """
         Currently you see the following things:
-          """+ obs+"""
+          """+ obs+self.additionalstateinfo+"""
                
         Currently you can access the following objects::
           """+str(self.env.getPossibleObjects())+"""
@@ -84,8 +86,12 @@ class scienv():
     
     def act(self,actiontext):
         self.actiontrace.append(actiontext)
+        
+        prevstate = self.getstate()
+        
         observation, reward, self.goalreached, info = self.env.step(actiontext)
-            
+        
+        poststate = self.getstate()
         if actiontext == "reset task":
             self.totalreward = 0
         else:
@@ -101,6 +107,8 @@ class scienv():
             #return self.observation#
             raise world_exception("invalid action")
         else:
+            if poststate == prevstate:
+                self.additionalstateinfo += "\n "+observation
             if reward > 0:
                 normalizedreward = math.log(reward)
             elif reward < 0: 
