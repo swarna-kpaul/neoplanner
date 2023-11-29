@@ -162,13 +162,15 @@ class neoplanner():
                 feedback = self.env.getfeedback()
                 EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace if trace["isvalidactionformemorizing"] == True]
                 self.env.trace = []
+                with open(self.stmstoragefile, 'wb') as f:
+                    pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
+                
                 
             self.searcher(EnvTrace, feedback, counter)
             input("Press any key to continue...")
             self.env.reset()
             counter += 1
-            with open(self.stmstoragefile, 'wb') as f:
-                pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
+            
 
             with open(self.beliefstorefile, 'wb') as f:
                 pickle.dump((self.env.environment["belief axioms"],self.env.totalexplore),f)

@@ -35,7 +35,7 @@ where X and Z are entities, subject, object, events from action perception trace
 Update on top of the current estimated belief axioms of the current environment based on the action observation trace. Do not remove the existing beliefs.
 Modify or remove the existing beliefs only if it contradicts with  ACTION OBSERVATION TRACE. You can add your new beliefs to the belief axioms. 
 
-The output should always be STRICTLY generated in the following list structure. Each element of list will be a text enclosed in DOUBLE QUOTES. add proper escape charachters in the text if required.
+The output should always be STRICTLY generated in the following list structure. Each element of list will be a text enclosed in DOUBLE QUOTES. add proper escape charachters in the text if required. DO NOT enclose the list in ``` tags.
 [ <list of learnings. do not write redundant or contradicting statements> ]
     
 Here is the environment objective and current belief axioms. You should update and output the belief axioms based on the action observation trace provided by the user.

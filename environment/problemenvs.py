@@ -99,15 +99,17 @@ class scienv():
         self.totalreward += reward
 
         if observation == "No known action matches that input.":
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0, "isvalidactionformemorizing": False })
-        elif observation in ["The door is not open.", "The door is already open."]:
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0, "isvalidactionformemorizing": True })
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 1, "isvalidactionformemorizing": False })
+        elif observation in ["The door is not open.", "The door is already open.","It's not clear how to get there from here."]:
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 1, "isvalidactionformemorizing": True })
             #raise world_exception("invalid action")
         elif actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
             self.goalreached = False
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions":0, "isvalidactionformemorizing": True})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions":1, "isvalidactionformemorizing": True})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
             #return self.observation#
+            print("Punishment:", -100)
+            self.reset()
             raise world_exception("invalid action")
         else:
             if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset"]:
