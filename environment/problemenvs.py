@@ -107,7 +107,7 @@ class scienv():
             #return self.observation#
             raise world_exception("invalid action")
         else:
-            if poststate == prevstate and actiontext != "look around" and reward != 0:
+            if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset"] and reward != 0:
                 self.additionalstateinfo += "\n "+observation
             if reward > 0:
                 normalizedreward = math.log(reward)
