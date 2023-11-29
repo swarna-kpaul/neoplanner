@@ -49,10 +49,11 @@ class scienv():
      
     def reset(self):
         obs1, info1 = self.env.reset()
+        self.additionalstateinfo = ""
         self.environment["current state"] = self.getstate()
         self.model.rootstate = True
         self.totalreward = 0
-        self.additionalstateinfo = ""
+        
      
     def getstate(self):
         obs, _,_,_ = self.env.step("look around")
@@ -99,6 +100,8 @@ class scienv():
 
         if observation == "No known action matches that input.":
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0, "isvalidactionformemorizing": False })
+        elif observation in ["The door is not open.", "The door is already open."]:
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0, "isvalidactionformemorizing": True })
             #raise world_exception("invalid action")
         elif actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
@@ -107,7 +110,7 @@ class scienv():
             #return self.observation#
             raise world_exception("invalid action")
         else:
-            if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset"] and reward != 0:
+            if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset"]:
                 self.additionalstateinfo += "\n "+observation
             if reward > 0:
                 normalizedreward = math.log(reward)
