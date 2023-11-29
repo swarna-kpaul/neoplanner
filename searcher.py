@@ -89,7 +89,8 @@ class neoplanner():
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
         
-        explore_probability = 0.6/ math.log(self.env.totalexplore)
+        explore_probability = 0.5/ math.log(math.sqrt(self.env.totalexplore))
+        print("Explore Probability:",explore_probability,self.env.totalexplore)
         probabilities = [explore_probability, 1-explore_probability]
         population = ["explore","objective"]
         item = random.choices(population, probabilities)[0]
@@ -152,14 +153,14 @@ class neoplanner():
             ########### Take actions
                 try:
                     for action in actionplan:
-                        self.env.act(action)
+                        print(self.env.act(action))
                 except world_exception as e:
                     pass
                 
                 
                 self.env.updatemodel()
                 feedback = self.env.getfeedback()
-                EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace]
+                EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace if trace["isvalidactionformemorizing"] == True]
                 self.env.trace = []
                 
             self.searcher(EnvTrace, feedback, counter)

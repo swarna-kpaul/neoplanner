@@ -11,7 +11,7 @@ class world_exception(Exception):
 class scienv():
     def __init__(self,task = "1-1", objective = None):
         self.env = ScienceWorldEnv(task)
-        self.totalexplore = 3
+        self.totalexplore = 9
         self.MINREWARD = -100
         self.MAXREWARD = 100
         obs1, info1 = self.env.reset()
@@ -92,22 +92,22 @@ class scienv():
         observation, reward, self.goalreached, info = self.env.step(actiontext)
         
         poststate = self.getstate()
-        if actiontext == "reset task":
-            self.totalreward = 0
-        else:
-            self.totalreward += reward
+        #if actiontext == "reset task":
+        #    self.totalreward = 0
+        #else:
+        self.totalreward += reward
 
         if observation == "No known action matches that input.":
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0})
-            raise world_exception("invalid action")
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions": 0, "isvalidactionformemorizing": False })
+            #raise world_exception("invalid action")
         elif actiontext.startswith("focus") and reward < 0:
             observation += " You focused on the wrong object and that resulted in a critical mistake the environment was reset"
             self.goalreached = False
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions":0})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions":0, "isvalidactionformemorizing": True})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
             #return self.observation#
             raise world_exception("invalid action")
         else:
-            if poststate == prevstate:
+            if poststate == prevstate and actiontext != "look around" and reward != 0:
                 self.additionalstateinfo += "\n "+observation
             if reward > 0:
                 normalizedreward = math.log(reward)
@@ -116,8 +116,8 @@ class scienv():
             else:
                 normalizedreward = reward#2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
             totalpossibleactions = len(self.env.getValidActionObjectCombinationsWithTemplates())
-            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward, "totactions": totalpossibleactions})        
-        return observation
+            self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward, "totactions": totalpossibleactions, "isvalidactionformemorizing": True})        
+        return observation,reward
     
     
     def updatemodel(self):
