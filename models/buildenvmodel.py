@@ -36,7 +36,7 @@ class envmodel():
         self.rootstate = True
         
         
-    def addaction(self,action,startstate, endstate, reward, totalactions):
+    def addaction(self,action,startstate, endstate, reward, totalactions,starttotactions):
         ###### if parent node of start node is root node then increment rootnode trial by 1
         if self.rootstate:
             self.statespace["nodes"][self.rootnodeid]["trial"] +=1
@@ -48,7 +48,7 @@ class envmodel():
                 
         else:
             startnodeid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":totalactions}
+            self.statespace["nodes"][startnodeid] = {"state": startstate, "value" : self.DEFAULTVALUE,"trial" : 1,"totalpossibleaction":starttotactions}
             ########## add root node edge
             #rootnodeid = self.statespace["nodes"]["start"]["id"]
             self.statespace["edges"][self.rootnodeid+"-"+startnodeid+"-"+"dummy"] = {"action": "dummy", "reward": 0,"from":self.rootnodeid,"to":startnodeid}
@@ -82,7 +82,7 @@ class envmodel():
         
     def parseacpt_trace(self,ACPT,startstate):    
         for actionperception in ACPT:
-            self.addaction(actionperception["action"], startstate, actionperception["state"], actionperception["reward"], actionperception["totactions"])
+            self.addaction(actionperception["action"], startstate, actionperception["state"], actionperception["reward"], actionperception["totactions"], actionperception["starttotactions"])
             startstate = actionperception["state"]
             
         self.updatevalue()        
