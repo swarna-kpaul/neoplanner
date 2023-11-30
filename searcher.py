@@ -89,7 +89,7 @@ class neoplanner():
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
         
-        explore_probability = 0.5/ math.log(math.sqrt(self.env.totalexplore))
+        explore_probability = 0.3/ math.log(math.sqrt(self.env.totalexplore))
         print("Explore Probability:",explore_probability,self.env.totalexplore)
         probabilities = [explore_probability, 1-explore_probability]
         population = ["explore","objective"]
@@ -136,7 +136,8 @@ class neoplanner():
             if lifetime <= 0: # or self.env.goalreached:
                 break
             EnvTrace = []
-            for i in range(4):    
+            localEnvTrace = []
+            for i in range(5):    
             ####### get additional instructions
                 instructions,preactionplan,_,explore,ucbfactor = self.env.getinstructions()
                 
@@ -145,7 +146,7 @@ class neoplanner():
                 print("Running actionplan....")
                 actionplan = []
             
-                actionplan = self.actplan(instructions,explore,EnvTrace,ucbfactor)
+                actionplan = self.actplan(instructions,explore,localEnvTrace,ucbfactor)
                 k = input("Press any button to continue ...")
                 actionplan = preactionplan + actionplan
                 
@@ -160,6 +161,7 @@ class neoplanner():
                 
                 self.env.updatemodel()
                 feedback = self.env.getfeedback()
+                localEnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace]
                 EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace if trace["isvalidactionformemorizing"] == True]
                 self.env.trace = []
                 with open(self.stmstoragefile, 'wb') as f:
