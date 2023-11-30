@@ -10,6 +10,7 @@ class world_exception(Exception):
 
 class scienv():
     def __init__(self,task = "1-1", objective = None):
+        self.task = task
         self.env = ScienceWorldEnv(task)
         self.totalexplore = 9
         self.MINREWARD = -100
@@ -48,6 +49,7 @@ class scienv():
      
     def reset(self):
         obs1, info1 = self.env.reset()
+        #self.env.load(self.task, random.choices(range(10))[0])
         self.additionalstateinfo = ""
         self.environment["current state"] = self.getstate()
         self.model.rootstate = True
@@ -111,7 +113,7 @@ class scienv():
             self.reset()
             raise world_exception("invalid action")
         else:
-            if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset", "inventory"]:
+            if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset", "inventory"] and not actiontext.startswith("look"):
                 self.additionalstateinfo += "\n "+observation
             if reward > 0:
                 normalizedreward = math.log(reward)
