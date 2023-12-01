@@ -22,6 +22,7 @@ class scienv():
         self.reward = -1
         self.totalreward = 0
         self.goalreached = False
+        self.toberesetflag = False
         self.additionalstateinfo = ""
         predescription = "An AI agent helping execute a science experiment in a simulated environment with limited number of objects and actions available at each step. "
         prioraxioms = """
@@ -54,6 +55,7 @@ class scienv():
         self.environment["current state"] = self.getstate()
         self.model.rootstate = True
         self.totalreward = 0
+        self.toberesetflag = False
         
      
     def getstate(self):
@@ -73,6 +75,8 @@ class scienv():
     def getfeedback(self):
         feedback = self.success_map('reward',self.totalreward)
         print ("total reward", self.totalreward)
+        if self.toberesetflag:
+            self.reset()
         #self.totalreward = 0
         #if max(self.reward) == 0:
         #    reward = -0.5
@@ -112,7 +116,8 @@ class scienv():
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward":float('-Inf'),"totactions":1,"starttotactions": startstatetotalpossibleactions, "isvalidactionformemorizing": True})  #( "{ Action taken: "+actiontext+" ; Observation : "+ observation.replace("\n", "; ")+"}")
             #return self.observation#
             print("Punishment:", -100)
-            self.reset()
+            self.toberesetflag = True
+            
             raise world_exception("invalid action")
         else:
             if poststate == prevstate and actiontext not in [ "look around", "reset task", "reset", "inventory"] and not actiontext.startswith("look"):
@@ -132,6 +137,7 @@ class scienv():
         self.model.parseacpt_trace(self.trace,self.environment["current state"])
         self.environment["current state"] = self.trace[-1]["state"]
         self.model.updatevalue()
+        
         #self.trace = []
     
     def getinstructions(self):
