@@ -17,12 +17,13 @@ llm_gpt4_turbo = ChatOpenAI(temperature=0.7, request_timeout=50, model="gpt-4-11
 llm_gpt4_turbo_hightemp = ChatOpenAI(temperature=1, request_timeout=50, model="gpt-4-1106-preview",openai_api_key=OPENAIAPIKEY)
 
 class neoplanner():
-    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None, beliefstorefile = None, beliefloadfile = None, counter = 0):
+    def __init__ (self, task="2-1", stmloadfile =None, stmstoragefile =None, beliefstorefile = None, beliefloadfile = None, sigma = 0.3, counter = 0):
     
         self.stmstoragefile = stmstoragefile
         self.beliefstorefile = beliefstorefile
         self.env = scienv(task)
         self.explore = True
+        self.sigma = sigma
         if stmloadfile != None: 
             ############ load saved satte 
             with open(stmloadfile, 'rb') as f:
@@ -92,7 +93,7 @@ class neoplanner():
         currentenvironment = pickle.loads(pickle.dumps(self.env.environment,-1))
         beliefaxioms = "\n".join(currentenvironment["belief axioms"])
         
-        explore_probability = 0.3/ math.log(math.sqrt(self.env.totalexplore))
+        explore_probability = self.sigma/ math.log(math.sqrt(self.env.totalexplore))
         print("Explore Probability:",explore_probability,self.env.totalexplore)
         probabilities = [explore_probability, 1-explore_probability]
         population = ["explore","objective"]
@@ -139,7 +140,7 @@ class neoplanner():
                 return self.env
             EnvTrace = []
             localEnvTrace = []
-            for i in range(5):    
+            for i in range(4):    
             ####### get additional instructions
                 instructions,preactionplan,_,explore,ucbfactor = self.env.getinstructions()
                 

@@ -31,7 +31,8 @@ Initialize the solver object
 # stmstoragefile is the name of the file (with full path) whare intermediate states can be saved. default value is None
 # beliefstorefile is the name of the file (with full path) whare intermediate learnings can be saved. default value is None
 # beliefloadfile is the name of the file (with full path) that contains intermediate learnings. The learnings will be loaded initially. default value is None
-solverobj = neoplanner(task = "2-1", stmloadfile =  None, stmstoragefile = None, beliefstorefile = None, beliefloadfile= None)
+# sigma is exploration probability constant. Increasing its value would increase random exploration by the the LLM.
+solverobj = neoplanner(task = "2-1", stmloadfile =  None, stmstoragefile = None, beliefstorefile = None, beliefloadfile= None, sigma = 0.3)
 ```
 
 Run the solver. 
@@ -48,6 +49,7 @@ The training will continue running until goal is reached. You may interrupt the 
 You can load the stmstoragefile and query the env object to get the action plan from state space graph.
 
 ```python
+import pickle
 from solver import scienv
 env = scienv("2-1")
 stmstoragefile = <file name with full path>
