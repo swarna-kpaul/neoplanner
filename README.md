@@ -9,7 +9,7 @@ Following is the architechture.
 ## Get Started
 First, clone the repo and navigate into the neoplanner directory and install the requirements
 
-```
+```bash
 git clone https://github.com/swarna-kpaul/neoplanner
 cd neoplanner
 python3 -m pip install -r requirements.txt
@@ -19,13 +19,13 @@ Then you need to modify the ***config/keys.py*** file to update the ***OPENAIAPI
 
 Thereafter the package can be imported
 
-```
+```python
 from solver import neoplanner
 ```
 
 Initialize the solver object
 
-```
+```python
 # task is the identifier of tasks as specified in 
 # stmloadfile is the name of the file (with full path) that contains saved state. The state will be loaded initially. default value is None
 # stmstoragefile is the name of the file (with full path) whare intermediate states can be saved. default value is None
@@ -36,7 +36,7 @@ solverobj = neoplanner(task = "2-1", stmloadfile =  None, stmstoragefile = None,
 
 Run the solver. 
 
-```
+```python
 env = solverobj.train()
 ######## get actionplan from statespace graph
 additionalinstructions,actionplan,_,_,_ = env.getinstructions()
@@ -47,7 +47,7 @@ The training will continue running until goal is reached. You may interrupt the 
 
 You can load the stmstoragefile and query the env object to get the action plan from state space graph.
 
-```
+```python
 from solver import scienv
 env = scienv("2-1")
 stmstoragefile = <file name with full path>
