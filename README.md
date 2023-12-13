@@ -4,7 +4,7 @@
 This repo contains the implementation of a sequential planning agent called, “neoplanner”. This planner is suitable for text based environments with large state space and action space. It synergizes both state space search with queries to foundational LLM to get the best action plan. The reward signals are quantitatively used to drive the search. A balance of exploration and exploitation is maintained by maximizing upper confidence bounds of values of states. In places where random exploration is needed, the LLM is queried to generate an action plan. Learnings from each trial are stored as entity relationships in text format. Those are used in future queries to the LLM for continual improvement. Experiments in the Scienceworld environment reveals a 124% improvement from the current best method in terms of average reward gained across multiple tasks.
 Following is the architechture. 
 
-<h3 align="center"><img src="https://github.com/swarna-kpaul/neoplanner/tree/main/config/architechture.png" width="75%"/></h3>
+<h3 align="center"><img src="https://github.com/swarna-kpaul/neoplanner/blob/main/config/architechture.png" width="75%"/></h3>
 
 ## Get Started
 First, clone the repo and navigate into the neoplanner directory and install the requirements
