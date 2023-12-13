@@ -23,7 +23,8 @@ class neoplanner():
         self.beliefstorefile = beliefstorefile
         self.env = scienv(task)
         self.explore = True
-        if stmloadfile != None:
+        if stmloadfile != None: 
+            ############ load saved satte 
             with open(stmloadfile, 'rb') as f:
                rootnodeid,invalidnodeid, DEFAULTVALUE,statespace,totaltrials, actiontrace,environment = pickle.load(f)
             self.env.model.rootnodeid = rootnodeid
@@ -37,6 +38,7 @@ class neoplanner():
             ############# execute action trace
             self.env.traceact()
         if beliefloadfile != None:
+            ############ load saved belief
             with open(beliefloadfile, 'rb') as f:
                beliefaxioms,totalexplore = pickle.load(f)
             self.env.environment["belief axioms"] = beliefaxioms
@@ -50,7 +52,7 @@ class neoplanner():
         self.COMBINERPROMPT = PromptTemplate(input_variables=COMBINERVARIABLES, template=combinertemplate)
 
     
-    def searcher (self,EnvTrace,feedback,counter):
+    def learner (self,EnvTrace,feedback,counter):
         currentenvironment = self.env.environment
         currentbelief = "  objective:"+ currentenvironment['objective']+"\n  belief axioms:"+ str(currentenvironment["belief axioms"])
         EnvTrace_text = "\n\n".join([str(i) for i in EnvTrace])
@@ -70,6 +72,7 @@ class neoplanner():
                 input("press any key....")
                 continue                
         if counter == 0 or len(beliefaxioms) > 50:
+            ######### compress learnings
             messages = self.COMBINERPROMPT.format(beliefaxioms = beliefaxioms)
             print("COMBINERPROMPT:",messages)
             while True:
@@ -119,7 +122,6 @@ class neoplanner():
             try:
                 output = ast.literal_eval(output)
             except Exception  as e:
-                    #errorfeedback = "Here is the last actionplan generated. "+ output+ "\n But this action plan has the following error. Modify the plan to remove the error.\n"+str(e)
                 print(traceback.format_exc())
                 input("Press any key to continue...")
                 continue    
@@ -132,9 +134,9 @@ class neoplanner():
     def train (self, lifetime = float("Inf")):   
         counter = self.counter
         while True:
-            print("GOAL REACHED",self.env.goalreached)
-            if lifetime <= 0: # or self.env.goalreached:
-                break
+            print("GOAL REACHED",self.env.checkgoal())
+            if lifetime <= 0 or self.env.checkgoal(): # or self.env.goalreached:
+                return self.env
             EnvTrace = []
             localEnvTrace = []
             for i in range(5):    
@@ -142,7 +144,7 @@ class neoplanner():
                 instructions,preactionplan,_,explore,ucbfactor = self.env.getinstructions()
                 
                 
-            ###### Run actor
+            ###### Run action plan generator
                 print("Running actionplan....")
                 actionplan = []
             
@@ -158,25 +160,31 @@ class neoplanner():
                 except world_exception as e:
                     pass
                 
-                
+                ########## update state space graph
                 self.env.updatemodel()
+                ########## get feedback
                 feedback = self.env.getfeedback()
                 localEnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace]
                 EnvTrace += [{"action": trace["action"], "observation": trace["observation"]} for trace in self.env.trace if trace["isvalidactionformemorizing"] == True]
                 self.env.trace = []
-                with open(self.stmstoragefile, 'wb') as f:
-                    pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
                 
+                if self.stmstoragefile != None:
+                ######## save current state
+                    with open(self.stmstoragefile, 'wb') as f:
+                        pickle.dump((self.env.model.rootnodeid,self.env.model.invalidnodeid, self.env.model.DEFAULTVALUE,self.env.model.statespace,self.env.model.totaltrials, self.env.actiontrace,self.env.environment),f)
                 
-            self.searcher(EnvTrace, feedback, counter)
+            
+            ######## update learnings            
+            self.learner(EnvTrace, feedback, counter)
             input("Press any key to continue...")
             self.env.reset()
             counter += 1
             
-
-            with open(self.beliefstorefile, 'wb') as f:
-                pickle.dump((self.env.environment["belief axioms"],self.env.totalexplore),f)
-   
-            
+            if self.beliefstorefile != None:
+            ######## save current learnings
+                with open(self.beliefstorefile, 'wb') as f:
+                    pickle.dump((self.env.environment["belief axioms"],self.env.totalexplore),f)
+       
+                
         
     

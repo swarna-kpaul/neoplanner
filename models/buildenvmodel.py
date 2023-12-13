@@ -59,7 +59,7 @@ class envmodel():
         
         ############## add retrieve end state
         if reward == float('-Inf'):
-            ############3 invalid action
+            ############ invalid action
             endnodeid = self.invalidnodeid
         else:
             endnodeid = [id for id,node in self.statespace["nodes"].items() if node["state"] == endstate]         
@@ -113,7 +113,7 @@ class envmodel():
                 self.statespace["nodes"][id]["ucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(parentnodetrials)/self.statespace["nodes"][id]["trial"])
                 numberofvalidactionstaken = len([edge for edge in self.statespace["edges"].values() if edge["from"] == id and self.statespace["nodes"][edge["to"]]["state"] != "invalid"])
                 self.statespace["nodes"][id]["defaultucbfactor"] = pow((self.statespace["nodes"][id]["totalpossibleaction"] - numberofvalidactionstaken)/self.statespace["nodes"][id]["totalpossibleaction"], NONLINEARITYFACTOR)
-                #self.statespace["nodes"][id]["exploreucb"] = self.statespace["nodes"][id]["value"] + ucb_c*math.sqrt(math.log(self.totaltrials)/self.statespace["nodes"][id]["trial"])*pow((self.statespace["nodes"][id]["totalpossibleaction"] - numberofvalidactionstaken)/self.statespace["nodes"][id]["totalpossibleaction"], NONLINEARITYFACTOR)
+
         
         self.defaultucbexplore = ucb_c*math.sqrt(math.log(self.totaltrials))
         
@@ -160,9 +160,6 @@ class envmodel():
             fromnodeid = tonode[1]
             visitednodeids.append(fromnodeid)
         prompt = ""
-        # if actionpath:
-            # prompt = "You need to take the following actions in sequence \n"+ "\n".join(actionpath)+"\n\n You you arrive at the following state after taking the above actions\n"+currentstate+"\n\n"
-        # else:
         ucbfactor = self.statespace["nodes"][fromnodeid]["defaultucbfactor"]
         if self.statespace["nodes"][fromnodeid]["trial"] > EXPLORETRIALTHRES:
             explore = True

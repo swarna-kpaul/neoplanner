@@ -82,13 +82,7 @@ class scienv():
         print ("total reward", self.totalreward)
         if self.toberesetflag:
             self.reset()
-        #self.totalreward = 0
-        #if max(self.reward) == 0:
-        #    reward = -0.5
-        #else:
-        #    reward = max(self.reward)
-        #obs1, info1 = self.env.reset()
-        return  feedback#"Observation: "+'\n'.join([i.replace("\n", "; ") for i in self.observation])+" External feedback: "+ str(self.success_map('reward',self.reward)), self.getstate()
+        return  feedback
     
     def traceact(self):
         for actiontext in self.actiontrace:
@@ -105,9 +99,6 @@ class scienv():
         observation, reward, self.goalreached, info = self.env.step(actiontext)
         
         poststate = self.getstate()
-        #if actiontext == "reset task":
-        #    self.totalreward = 0
-        #else:
         self.totalreward += reward
 
         if observation == "No known action matches that input.":
@@ -132,7 +123,7 @@ class scienv():
             elif reward < 0: 
                 normalizedreward = -math.log(-reward)
             else:
-                normalizedreward = reward#2*(reward - self.MINREWARD) /(self.MAXREWARD - self.MINREWARD) - 1  ## in -1 to 1 scale
+                normalizedreward = reward 
             totalpossibleactions = len(self.env.getValidActionObjectCombinationsWithTemplates())
             self.trace.append({"action":actiontext, "observation" : observation.replace("\n", "; "), "state": self.getstate(), "reward": normalizedreward, "totactions": totalpossibleactions,"starttotactions": startstatetotalpossibleactions, "isvalidactionformemorizing": True})        
         return observation,reward
@@ -142,20 +133,18 @@ class scienv():
         self.model.parseacpt_trace(self.trace,self.environment["current state"])
         self.environment["current state"] = self.trace[-1]["state"]
         self.model.updatevalue()
-        
-        #self.trace = []
+
     
     def getinstructions(self):
         return self.model.getplandetails(self.environment["current state"])
         
         
     def checkgoal(self):
-        #obs1, info1 = self.env.reset()
-        self.observation = []
-        self.reward = -1
-        print ("total reward", self.totalreward)
-        
-        return self.goalreached
+        if self.totalreward == 100:
+            return True
+        else:
+            return False
+                
     
     def success_map(self, metric, score):
         feedback = ''
