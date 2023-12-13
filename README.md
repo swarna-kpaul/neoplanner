@@ -66,6 +66,21 @@ env.reset()
 additionalinstructions,actionplan,_,_,_ = env.getinstructions()
 ```
 
+The pretrainedfiles folder contains all trained statespace and learning files for 7 tasks.
+You can look into the solved actionplan of the tasks using the above code, by setting the stmstoragefile with appropriate file name
+
+The learnings can be seen by running the following code
+
+```python
+import pickle
+beliefloadfile = <belief load file name>
+with open(beliefloadfile, 'rb') as f:
+    beliefaxioms,totalexplore = pickle.load(f)
+print(beliefaxioms)
+```
+
+
+
 ## Citation
 ```
 @misc{paul2023sequential,
